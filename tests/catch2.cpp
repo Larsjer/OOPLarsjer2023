@@ -1,34 +1,54 @@
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include <catch.hpp>
 
 #include <cmath>
 #include "threepp/threepp.hpp"
 
 using namespace threepp;
 
-// Define a small threshold for floating point comparison
-const double EPSILON = 1e-6;
+TEST_CASE("Cube behavior", "[Cube]") {
+int screenWidth = 800;
+int screenHeight = 600;
 
-// Unit test for Cube class
-TEST_CASE("Cube class tests", "[cube]") {
 // Create a cube
 Cube cube;
 
-// Test initial position
-Vector3 initialPos = cube.mesh_->position();
-REQUIRE(initialPos.x() == Approx(0.0).epsilon(EPSILON));
-REQUIRE(initialPos.y() == Approx(0.0).epsilon(EPSILON));
-REQUIRE(initialPos.z() == Approx(0.0).epsilon(EPSILON));
+SECTION("Initial state") {
+// Verify initial state of the cube
+REQUIRE(cube.scene_ != nullptr);
+REQUIRE(cube.mesh_ != nullptr);
+REQUIRE(cube.roundCounter_ == 0);
+REQUIRE(cube.isInsideLoop_ == false);
+REQUIRE(cube.isDragging_ == false);
+}
 
-// Test update function
-double deltaTime = 0.016;  // 60 FPS
-double mouseX = 400;
-double mouseY = 300;
-int screenWidth = 800;
-int screenHeight = 600;
+SECTION("Mouse interaction") {
+// Simulate mouse interaction
+double deltaTime = 0.016; // Example delta time value
+double mouseX = 400; // Example mouse X coordinate
+double mouseY = 300; // Example mouse Y coordinate
+
+// Simulate mouse click inside the cube
+cube.startDrag();
 cube.update(deltaTime, mouseX, mouseY, screenWidth, screenHeight);
-Vector3 newPos = cube.mesh_->position();
-REQUIRE(newPos.x() != Approx(initialPos.x()).epsilon(EPSILON));
-REQUIRE(newPos.y() != Approx(initialPos.y()).epsilon(EPSILON));
-REQUIRE(newPos.z() != Approx(initialPos.z()).epsilon(EPSILON));
+
+// Verify the cube is being dragged
+REQUIRE(cube.isDragging_ == true);
+
+// Simulate mouse release
+cube.stopDrag();
+cube.update(deltaTime, mouseX, mouseY, screenWidth, screenHeight);
+
+// Verify the cube is no longer being dragged
+REQUIRE(cube.isDragging_ == false);
+}
+
+SECTION("Loop collision") {
+// Simulate cube positions inside and outside the loop
+cube.mesh_->position().set(0, 0, 0); // Position inside the loop
+REQUIRE(cube.checkLoopCollision() == true);
+
+cube.mesh_->position().set(5, 0, 0); // Position outside the loop
+REQUIRE(cube.checkLoopCollision() == false);
+}
 }
