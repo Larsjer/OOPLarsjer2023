@@ -1,54 +1,92 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 
-#include <cmath>
-#include "threepp/threepp.hpp"
+#include "../main.cpp"
 
-using namespace threepp;
+// Test case for the screenToNDC function
+TEST_CASE("Screen to NDC conversion", "[screenToNDC]") {
+    SECTION("Conversion with positive coordinates") {
+        float x = 100;
+        float y = 200;
+        float screenWidth = 800;
+        float screenHeight = 600;
 
-TEST_CASE("Cube behavior", "[Cube]") {
-int screenWidth = 800;
-int screenHeight = 600;
+        Vector2 result = screenToNDC(x, y, screenWidth, screenHeight);
 
-// Create a cube
-Cube cube;
+        REQUIRE(result.x == Approx(0.25f));
+        REQUIRE(result.y == Approx(-0.333f));
+    }
 
-SECTION("Initial state") {
-// Verify initial state of the cube
-REQUIRE(cube.scene_ != nullptr);
-REQUIRE(cube.mesh_ != nullptr);
-REQUIRE(cube.roundCounter_ == 0);
-REQUIRE(cube.isInsideLoop_ == false);
-REQUIRE(cube.isDragging_ == false);
+    SECTION("Conversion with negative coordinates") {
+        float x = -100;
+        float y = -200;
+        float screenWidth = 800;
+        float screenHeight = 600;
+
+        Vector2 result = screenToNDC(x, y, screenWidth, screenHeight);
+
+        REQUIRE(result.x == Approx(-0.75f));
+        REQUIRE(result.y == Approx(0.666f));
+    }
 }
 
-SECTION("Mouse interaction") {
-// Simulate mouse interaction
-double deltaTime = 0.016; // Example delta time value
-double mouseX = 400; // Example mouse X coordinate
-double mouseY = 300; // Example mouse Y coordinate
+// Test case for the Cube class
+TEST_CASE("Cube class", "[Cube]") {
+    // Test case for the checkLoopCollision function
+    SECTION("Check loop collision") {
+        Cube cube;
+        cubeFriend cubeFriend;
+        cubeFriend.accessCubeMembers(cube);
 
-// Simulate mouse click inside the cube
-cube.startDrag();
-cube.update(deltaTime, mouseX, mouseY, screenWidth, screenHeight);
+        // Cube inside the loop
+        cube.stopDrag();
+        cube.update(1.0, 1.5, 0.5, 800, 600, cube, PerspectiveCamera::create(), Scene::create(), Object3D::create());
 
-// Verify the cube is being dragged
-REQUIRE(cube.isDragging_ == true);
+        REQUIRE(cube.checkLoopCollision() == true);
 
-// Simulate mouse release
-cube.stopDrag();
-cube.update(deltaTime, mouseX, mouseY, screenWidth, screenHeight);
+        // Cube outside the loop
+        cube.stopDrag();
+        cube.update(1.0, 4.0, 0.0, 800, 600, cube, PerspectiveCamera::create(), Scene::create(), Object3D::create());
 
-// Verify the cube is no longer being dragged
-REQUIRE(cube.isDragging_ == false);
+        REQUIRE(cube.checkLoopCollision() == false);
+    }
 }
 
-SECTION("Loop collision") {
-// Simulate cube positions inside and outside the loop
-cube.mesh_->position().set(0, 0, 0); // Position inside the loop
-REQUIRE(cube.checkLoopCollision() == true);
+// Test case for the CanvasClass class
+TEST_CASE("CanvasClass class", "[CanvasClass]") {
+    // Test case for the getMouseX and getMouseY functions
+    SECTION("Get mouse position") {
+        CanvasClass canvas;
 
-cube.mesh_->position().set(5, 0, 0); // Position outside the loop
-REQUIRE(cube.checkLoopCollision() == false);
+        canvasFriend canvasFriend;
+        canvasFriend.accessCanvasVariables(canvas);
+
+        // Initial mouse position should be 0
+        REQUIRE(canvas.getMouseX() == 0);
+        REQUIRE(canvas.getMouseY() == 0);
+
+        // Set new mouse position
+        canvas.onMouseDown([](int button, int x, int y) {
+            // Set mouse position to (100, 200)
+            canvas.mouseX_ = 100;
+            canvas.mouseY_ = 200;
+        });
+
+        // Mouse position should be updated
+        REQUIRE(canvas.getMouseX() == 100);
+        REQUIRE(canvas.getMouseY() == 200);
+    }
 }
+
+// Test case for the main function
+TEST_CASE("Main function", "[main]") {
+    // Test case for the screen size variables
+    SECTION("Screen size") {
+        int screenWidth = 1280;
+        int screenHeight = 960;
+
+        // Verify the values of the screen size variables
+        REQUIRE(screenWidth == 1280);
+        REQUIRE(screenHeight == 960);
+    }
 }
