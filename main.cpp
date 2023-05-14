@@ -26,13 +26,13 @@ Vector2 screenToNDC(float x, float y, float screenWidth, float screenHeight) {
 
 class CanvasClass {
 private:
-    friend class canvasFriend;
+
     int mouseX_;
     int mouseY_;
     bool mouseDown_;
 
 public:
-
+    friend class canvasFriend;
     CanvasClass() {
         mouseX_ = 0;
         mouseY_ = 0;
@@ -70,17 +70,14 @@ public:
     }
 };
 
-
-
 class canvasFriend{
 public:
     void accessCanvasVariables(CanvasClass& CanvasClass){
-        CanvasClass.mouseX_ = 0;
-        CanvasClass.mouseY_ = 0;
+        CanvasClass.getMouseX() = 0;
+        CanvasClass.getMouseY() = 0;
     }
 };
 
-class Ptr;// Cube class
 class Cube {
 public:
     using Ptr = std::shared_ptr<Cube>;
@@ -140,8 +137,6 @@ public:
         isDragging_ = false;
     }
 
-    friend class CubeTest;
-
 private:
     // Trailing position of the cube
     Vector3 trailingPos_;
@@ -164,11 +159,9 @@ private:
 class cubeFriend{
 public:
     void accessCubeMembers(Cube& cube) {
-        // Access and modify private members of the Cube class
         cube.trailingPos_.x = 10;
         cube.isDragging_ = true;
         cube.checkLoopCollision() = true;
-
     }
 };
 

@@ -69,8 +69,8 @@ TEST_CASE("CanvasClass class", "[CanvasClass]") {
         // Set new mouse position
         canvas.onMouseDown([](int button, int x, int y) {
             // Set mouse position to (100, 200)
-            canvas.mouseX_ = 100;
-            canvas.mouseY_ = 200;
+            canvas.getMouseX() = 100;
+            canvas.getMouseY() = 200;
         });
 
         // Mouse position should be updated
