@@ -1,26 +1,90 @@
 #include <iostream>
 #include <cmath>
 #include "threepp/threepp.hpp"
+#include "threepp/geometries/geometries.hpp"
+#include "threepp/geometries/BoxGeometry.hpp"
+#include "threepp/materials/MeshBasicMaterial.hpp"
+#include "threepp/objects/Mesh.hpp"
+#include "threepp/scenes/Scene.hpp"
+#include "threepp/cameras/PerspectiveCamera.hpp"
+#include "threepp/math/Color.hpp"
+#include "threepp/materials/Material.hpp"
+
+
+
 
 using namespace threepp;
 
+
 // Function to calculate normalized device coordinates (NDC) from screen coordinates
-Vector2 screenToNDC(double x, double y, double screenWidth, double screenHeight) {
+Vector2 screenToNDC(float x, float y, float screenWidth, float screenHeight) {
     double ndcX = (x / screenWidth) * 2 - 1;
     double ndcY = -(y / screenHeight) * 2 + 1;
-    return {ndcX, ndcY};
+    return threepp::Vector2(static_cast<float>(ndcX), static_cast<float>(ndcY));
+
 }
 
-// Cube class
+class Canvas {
+private:
+    int mouseX_;
+    int mouseY_;
+    bool mouseDown_; // Variable to store the mouse down state
+
+public:
+    Canvas() {
+        mouseX_ = 0;
+        mouseY_ = 0;
+        mouseDown_ = false; // Initialize mouseDown_ to false
+    }
+
+    int getMouseX() const {
+        return mouseX_;
+    }
+
+    int getMouseY() const {
+        return mouseY_;
+    }
+
+    bool getMouseDown() const {
+        return mouseDown_;
+    }
+
+    void setSize(int width, int height) {
+        // Implementation of setSize function
+        // ...
+    }
+
+    void animate(std::function<void(double)> callback) {
+        // Implementation of animate function
+        // ...
+    }
+
+    void render(Scene::Ptr scene, PerspectiveCamera::Ptr camera) {
+        // Implementation of render function
+        // ...
+    }
+
+    void onMouseDown(std::function<void(int, int, int)> callback) {
+        // Implementation of onMouseDown function
+        // ...
+    }
+
+    void onMouseUp(std::function<void(int, int, int)> callback) {
+        // Implementation of onMouseUp function
+        // ...
+    }
+};
+
+class Ptr;// Cube class
 class Cube {
 public:
-    Cube() {
-        // Create geometry and material
-        geometry_ = BoxGeometry::create(1, 1, 1);
-        material_ = MeshBasicMaterial::create(Color(0xff0000));
+    using Ptr = std::shared_ptr<Cube>;
 
-        // Create mesh and add to scene
-        mesh_ = Mesh::create(geometry_, material_);
+    Cube() {
+        auto geometry_ = BoxGeometry::create(1, 1, 1);
+        auto material_ = MeshBasicMaterial::create();
+        auto mesh_ = Mesh::create(geometry_, material_);
+        auto scene_ = Scene::create();
         scene_->add(mesh_);
 
         // Set initial position and trailing position
@@ -34,10 +98,10 @@ public:
 
     // Update function to be called every frame
     void update(double deltaTime, double mouseX, double mouseY, int screenWidth, int screenHeight) {
-        // Get mouse cursor position in normalized device coordinates (NDC)
+        // Get mouse cursor position
         Vector2 mouseNDC = screenToNDC(mouseX, mouseY, screenWidth, screenHeight);
 
-        // Convert NDC to world coordinates
+        // Convert mouse cursor position into coordinates
         Raycaster raycaster;
         raycaster.setFromCamera(mouseNDC, camera_);
         auto intersects = raycaster.intersectObjects({mesh_});
@@ -72,11 +136,11 @@ public:
 
 private:
     // Three.js objects
-    Geometry::Ptr geometry_;
-    Material::Ptr material_;
+    BoxGeometry::Ptr geometry_;
+    MeshBasicMaterial::Ptr material_;
     Mesh::Ptr mesh_;
-    Scene::Ptr scene_ = Scene::create();
-    PerspectiveCamera::Ptr camera_ = PerspectiveCamera::create(70, 1.0, 0.1, 1000);
+    Scene::Ptr scene_;
+    PerspectiveCamera::Ptr camera_;
 
     // Trailing position of the cube
     Vector3 trailingPos_;
@@ -100,7 +164,8 @@ int main() {
     // Create a canvas
     int screenWidth = 800;
     int screenHeight = 600;
-    Canvas canvas(screenWidth, screenHeight);
+    threepp::Canvas canvas("MyCanvas");
+    canvas.setSize(screenWidth, screenHeight);
 
     // Create a cube
     Cube cube;
@@ -113,22 +178,22 @@ int main() {
 
     // Mouse event handling
     canvas.onMouseDown([&](int button, int x, int y) {
-        if (button == 0) { // Left mouse button
-            Vector2 mouseNDC = screenToNDC(x, y, screenWidth, screenHeight);
-            Raycaster raycaster;
-            raycaster.setFromCamera(mouseNDC, cube.camera_);
-            auto intersects = raycaster.intersectObjects({cube.mesh_});
-            if (!intersects.empty()) {
-                cube.startDrag();
-            }
+        float normalizedX = static_cast<float>(x) / screenWidth * 2 - 1;
+        float normalizedY = static_cast<float>(y) / screenHeight * -2 + 1;
+        threepp::Raycaster raycaster;
+        raycaster.setFromCamera(cube.camera_, normalizedX, normalizedY);
+        std::vector<threepp::Intersection> intersects = raycaster.intersectObjects(cube.scene_->children());
+
+        if (!intersects.empty()) {
+            threepp::Intersection& intersection = intersects[0];
+            intersection.object->material->color = threepp::Color::grey();
         }
     });
 
-    canvas.onMouseUp([&](int button, int x, int y) {
+    canvas.onMouseDown([&](int button, int x, int y) {
         if (button == 0) { // Left mouse button
             cube.stopDrag();
         }
     });
-
     return 0;
 }
