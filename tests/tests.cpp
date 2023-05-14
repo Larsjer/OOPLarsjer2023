@@ -3,6 +3,7 @@
 
 #include "../main.cpp"
 
+
 // Test case for the screenToNDC function
 TEST_CASE("Screen to NDC conversion", "[screenToNDC]") {
     SECTION("Conversion with positive coordinates") {

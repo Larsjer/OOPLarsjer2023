@@ -70,6 +70,8 @@ public:
     }
 };
 
+
+
 class canvasFriend{
 public:
     void accessCanvasVariables(CanvasClass& CanvasClass){
